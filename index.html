@@ -1,824 +1,1015 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agent Cards — Trading Cards for the Agent Internet</title>
-<meta name="description" content="Generate beautiful trading cards for AI agents. The Pokémon cards of the agent internet.">
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --border: #1e1e2e;
-    --text: #e4e4ef;
-    --muted: #6e6e8a;
-    --accent: #8b5cf6;
-    --accent2: #06b6d4;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --success: #22c55e;
-  }
-
-  body {
-    font-family: 'Space Grotesk', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  header {
-    text-align: center;
-    padding: 3rem 1rem 1.5rem;
-    max-width: 600px;
-  }
-
-  header h1 {
-    font-size: 2.2rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 0.5rem;
-  }
-
-  header p {
-    color: var(--muted);
-    font-size: 1rem;
-    line-height: 1.5;
-  }
-
-  .container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    justify-content: center;
-    padding: 1rem;
-    max-width: 1100px;
-    width: 100%;
-  }
-
-  /* ===== Form ===== */
-  .form-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    width: 360px;
-    flex-shrink: 0;
-  }
-
-  .form-panel h2 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: var(--accent);
-  }
-
-  .field { margin-bottom: 1rem; }
-
-  .field label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--muted);
-    margin-bottom: 0.3rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .field input, .field select, .field textarea {
-    width: 100%;
-    padding: 0.6rem 0.8rem;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .field input:focus, .field select:focus, .field textarea:focus {
-    border-color: var(--accent);
-  }
-
-  .field textarea { resize: vertical; min-height: 60px; }
-
-  /* Stat sliders */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.8rem;
-  }
-
-  .stat-field label {
-    font-size: 0.7rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .stat-field input[type="range"] {
-    width: 100%;
-    accent-color: var(--accent);
-    background: transparent;
-    border: none;
-    padding: 0;
-  }
-
-  .stat-field .stat-val {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--accent2);
-    float: right;
-  }
-
-  .rarity-select {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .rarity-select button {
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--muted);
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .rarity-select button.active {
-    border-color: var(--accent);
-    color: var(--text);
-    background: rgba(139, 92, 246, 0.15);
-  }
-
-  .rarity-select button:hover { border-color: var(--accent); }
-
-  .generate-btn {
-    width: 100%;
-    padding: 0.8rem;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-    margin-top: 0.5rem;
-  }
-
-  .generate-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
-  }
-
-  .btn-row {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
-  .btn-row button {
-    flex: 1;
-    padding: 0.6rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--muted);
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-row button:hover { border-color: var(--accent); color: var(--text); }
-
-  /* ===== Card ===== */
-  .card-panel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .agent-card {
-    width: 340px;
-    border-radius: 16px;
-    overflow: hidden;
-    position: relative;
-    background: var(--surface);
-    border: 2px solid var(--border);
-    transition: all 0.3s;
-  }
-
-  .agent-card.rarity-common { border-color: #6b7280; }
-  .agent-card.rarity-rare { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
-  .agent-card.rarity-epic { border-color: #8b5cf6; box-shadow: 0 0 25px rgba(139, 92, 246, 0.3); }
-  .agent-card.rarity-legendary { border-color: #f59e0b; box-shadow: 0 0 30px rgba(245, 158, 11, 0.3); }
-
-  .card-header {
-    padding: 1.2rem 1.2rem 0.8rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-
-  .card-name {
-    font-size: 1.3rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  .card-handle {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
-
-  .card-rarity {
-    font-size: 0.65rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 0.2rem 0.6rem;
-    border-radius: 20px;
-    flex-shrink: 0;
-  }
-
-  .rarity-common .card-rarity { background: rgba(107,114,128,0.2); color: #9ca3af; }
-  .rarity-rare .card-rarity { background: rgba(59,130,246,0.2); color: #60a5fa; }
-  .rarity-epic .card-rarity { background: rgba(139,92,246,0.2); color: #a78bfa; }
-  .rarity-legendary .card-rarity { background: rgba(245,158,11,0.2); color: #fbbf24; }
-
-  .card-avatar {
-    width: 100%;
-    height: 180px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 5rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .card-avatar .bg-pattern {
-    position: absolute;
-    inset: 0;
-    opacity: 0.08;
-    background: repeating-linear-gradient(45deg, currentColor 0px, transparent 1px, transparent 20px);
-  }
-
-  .card-type {
-    font-size: 0.7rem;
-    font-weight: 500;
-    color: var(--muted);
-    padding: 0 1.2rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .card-bio {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.85rem;
-    line-height: 1.5;
-    color: var(--text);
-    opacity: 0.85;
-    min-height: 3rem;
-  }
-
-  .card-stats {
-    padding: 0.8rem 1.2rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 0.5rem;
-  }
-
-  .card-stat {
-    text-align: center;
-  }
-
-  .card-stat .stat-label {
-    font-size: 0.6rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .stat-bar {
-    height: 4px;
-    background: var(--bg);
-    border-radius: 2px;
-    margin: 0.3rem 0;
-    overflow: hidden;
-  }
-
-  .stat-bar .fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width 0.6s ease;
-  }
-
-  .card-stat .stat-num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-
-  .card-footer {
-    padding: 0.8rem 1.2rem;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.7rem;
-    color: var(--muted);
-  }
-
-  .card-footer .card-id {
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  /* Gallery */
-  .gallery-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--muted);
-    margin-top: 2rem;
-    text-align: center;
-  }
-
-  .gallery {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    justify-content: center;
-    padding: 1rem;
-    max-width: 1200px;
-  }
-
-  .gallery .agent-card {
-    transform: scale(0.85);
-    transform-origin: top center;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-
-  .gallery .agent-card:hover { transform: scale(0.9); }
-
-  footer {
-    text-align: center;
-    padding: 2rem;
-    color: var(--muted);
-    font-size: 0.8rem;
-  }
-
-  footer a { color: var(--accent); text-decoration: none; }
-  footer a:hover { text-decoration: underline; }
-
-  @media (max-width: 768px) {
-    .container { flex-direction: column; align-items: center; }
-    .form-panel { width: 100%; max-width: 400px; }
-    .agent-card { width: 100%; max-width: 340px; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Cards - Holographic Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --text-primary: #e8e8f0;
+            --text-secondary: #9898a8;
+            
+            /* Rarity colors */
+            --common-hue: 200;
+            --rare-hue: 220;
+            --epic-hue: 270;
+            --legendary-hue: 45;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffd6e8 0%, #a8e6ff 25%, #ffe8a8 50%, #e8d6ff 75%, #ffd6e8 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 8s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            to { background-position: 200% center; }
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+        
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .form-section, .preview-section {
+            background: rgba(18, 18, 26, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+        
+        h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+        }
+        
+        input[type="text"],
+        input[type="url"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .stat-inputs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        button {
+            background: linear-gradient(135deg, rgba(255, 214, 232, 0.15), rgba(168, 230, 255, 0.15));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-primary);
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, rgba(255, 214, 232, 0.25), rgba(168, 230, 255, 0.25));
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        /* Agent Card Styles */
+        .card-container {
+            perspective: 1000px;
+            display: flex;
+            justify-content: center;
+            min-height: 600px;
+        }
+        
+        .agent-card {
+            width: 380px;
+            height: 580px;
+            position: relative;
+            border-radius: 1.5rem;
+            transition: transform 0.3s ease;
+            transform-style: preserve-3d;
+            background: var(--bg-card);
+            overflow: hidden;
+        }
+        
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 1.5rem;
+            padding: 2px;
+            background: conic-gradient(
+                from var(--rotation, 0deg),
+                hsl(var(--card-hue, 200), 70%, 85%) 0deg,
+                hsl(calc(var(--card-hue, 200) + 60), 70%, 85%) 60deg,
+                hsl(calc(var(--card-hue, 200) + 120), 70%, 85%) 120deg,
+                hsl(calc(var(--card-hue, 200) + 180), 70%, 85%) 180deg,
+                hsl(calc(var(--card-hue, 200) + 240), 70%, 85%) 240deg,
+                hsl(calc(var(--card-hue, 200) + 300), 70%, 85%) 300deg,
+                hsl(var(--card-hue, 200), 70%, 85%) 360deg
+            );
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: rotate-border 4s linear infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes rotate-border {
+            to { --rotation: 360deg; }
+        }
+        
+        @property --rotation {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+        
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                hsl(var(--card-hue, 200), 15%, 12%) 0%, 
+                hsl(var(--card-hue, 200), 20%, 8%) 100%
+            );
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+        
+        .holographic-overlay {
+            position: absolute;
+            inset: 0;
+            border-radius: 1.5rem;
+            background: conic-gradient(
+                from 0deg at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                transparent 0deg,
+                rgba(255, 214, 232, 0.2) 45deg,
+                rgba(168, 230, 255, 0.2) 90deg,
+                rgba(255, 232, 168, 0.2) 135deg,
+                rgba(232, 214, 255, 0.2) 180deg,
+                rgba(255, 214, 232, 0.2) 225deg,
+                rgba(168, 230, 255, 0.2) 270deg,
+                rgba(255, 232, 168, 0.2) 315deg,
+                transparent 360deg
+            );
+            mix-blend-mode: overlay;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 2;
+        }
+        
+        .agent-card:hover .holographic-overlay {
+            opacity: 1;
+        }
+        
+        .specular-highlight {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 3;
+            mix-blend-mode: overlay;
+        }
+        
+        .agent-card:hover .specular-highlight {
+            opacity: 1;
+        }
+        
+        .card-rarity {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 4;
+        }
+        
+        .avatar-section {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 2rem auto 1rem;
+            z-index: 4;
+        }
+        
+        .avatar-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+        
+        .avatar-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: url(#halftone);
+        }
+        
+        .agent-name {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            z-index: 4;
+            position: relative;
+        }
+        
+        .agent-role {
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+            z-index: 4;
+            position: relative;
+        }
+        
+        .agent-bio {
+            text-align: center;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1.5rem;
+            flex-grow: 0;
+            z-index: 4;
+            position: relative;
+        }
+        
+        .stats-section {
+            margin-top: auto;
+            z-index: 4;
+            position: relative;
+        }
+        
+        .stats-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .stats-radial {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .stat-circle {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .stat-circle svg {
+            transform: rotate(-90deg);
+        }
+        
+        .stat-circle circle {
+            fill: none;
+            stroke-width: 6;
+        }
+        
+        .stat-circle .stat-bg {
+            stroke: rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-circle .stat-fill {
+            stroke: hsl(var(--card-hue, 200), 70%, 75%);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease;
+        }
+        
+        .stat-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .stat-name {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        /* Gallery Styles */
+        .gallery-section {
+            margin-top: 4rem;
+        }
+        
+        .gallery-section h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+        
+        .gallery-card {
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .gallery-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .gallery-card .agent-card {
+            width: 100%;
+            height: 480px;
+        }
+        
+        /* Download Hint */
+        .download-hint {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        
+        /* SVG Filters */
+        svg {
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+        
+        /* Rarity Classes */
+        .rarity-common { --card-hue: var(--common-hue); }
+        .rarity-rare { --card-hue: var(--rare-hue); }
+        .rarity-epic { --card-hue: var(--epic-hue); }
+        .rarity-legendary { --card-hue: var(--legendary-hue); }
+        
+        .rarity-legendary .holographic-overlay {
+            opacity: 0.3;
+        }
+        
+        .rarity-legendary:hover .holographic-overlay {
+            opacity: 1;
+            animation: pulse-holo 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-holo {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
 </head>
 <body>
+    <!-- SVG Filters -->
+    <svg>
+        <defs>
+            <filter id="halftone">
+                <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="noise"/>
+                <feColorMatrix type="saturate" values="0" in="noise" result="monoNoise"/>
+                <feBlend in="SourceGraphic" in2="monoNoise" mode="multiply"/>
+            </filter>
+        </defs>
+    </svg>
 
-<header>
-  <h1>🃏 Agent Cards</h1>
-  <p>Trading cards for the agent internet. Create your AI agent's card, share it with the world.</p>
-</header>
+    <div class="container">
+        <header>
+            <h1>AI Agent Cards</h1>
+            <p class="subtitle">Holographic Collector's Edition</p>
+        </header>
 
-<div class="container">
-  <div class="form-panel">
-    <h2>Create Your Card</h2>
+        <div class="main-grid">
+            <!-- Form Section -->
+            <div class="form-section">
+                <h2>Create Your Agent</h2>
+                <form id="agentForm">
+                    <div class="form-group">
+                        <label for="name">Agent Name</label>
+                        <input type="text" id="name" placeholder="Enter agent name" required>
+                    </div>
 
-    <div class="field">
-      <label>Agent Name</label>
-      <input type="text" id="name" placeholder="Hal" maxlength="30">
+                    <div class="form-group">
+                        <label for="role">Role / Specialty</label>
+                        <input type="text" id="role" placeholder="e.g., Code Architect, Data Analyst">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bio">Bio</label>
+                        <textarea id="bio" placeholder="Brief description of the agent's purpose and personality"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="avatar">Avatar URL</label>
+                        <input type="url" id="avatar" placeholder="https://...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rarity">Rarity</label>
+                        <select id="rarity">
+                            <option value="common">Common</option>
+                            <option value="rare">Rare</option>
+                            <option value="epic">Epic</option>
+                            <option value="legendary">Legendary</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Stats (0-100)</label>
+                        <div class="stat-inputs">
+                            <div>
+                                <label for="intelligence">Intelligence</label>
+                                <input type="number" id="intelligence" min="0" max="100" value="80">
+                            </div>
+                            <div>
+                                <label for="creativity">Creativity</label>
+                                <input type="number" id="creativity" min="0" max="100" value="75">
+                            </div>
+                            <div>
+                                <label for="speed">Speed</label>
+                                <input type="number" id="speed" min="0" max="100" value="90">
+                            </div>
+                            <div>
+                                <label for="reliability">Reliability</label>
+                                <input type="number" id="reliability" min="0" max="100" value="95">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit">Update Card</button>
+                        <button type="button" id="randomBtn">Random Agent</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <h2>Preview</h2>
+                <div class="card-container">
+                    <div class="agent-card" id="previewCard">
+                        <div class="card-inner">
+                            <div class="holographic-overlay"></div>
+                            <div class="specular-highlight"></div>
+                            <div class="card-rarity"></div>
+                            <div class="avatar-section">
+                                <div class="avatar-container">
+                                    <img id="cardAvatar" src="" alt="Agent Avatar">
+                                </div>
+                            </div>
+                            <h3 class="agent-name" id="cardName">Agent Name</h3>
+                            <div class="agent-role" id="cardRole">Role</div>
+                            <p class="agent-bio" id="cardBio">Bio goes here</p>
+                            <div class="stats-section">
+                                <div class="stats-label">Core Attributes</div>
+                                <div class="stats-radial">
+                                    <div class="stat-item">
+                                        <div class="stat-circle">
+                                            <svg width="80" height="80">
+                                                <circle class="stat-bg" cx="40" cy="40" r="34"></circle>
+                                                <circle class="stat-fill" cx="40" cy="40" r="34" 
+                                                        stroke-dasharray="213.6" 
+                                                        stroke-dashoffset="53.4" 
+                                                        id="intelligenceCircle"></circle>
+                                            </svg>
+                                            <div class="stat-value" id="intelligenceValue">80</div>
+                                        </div>
+                                        <div class="stat-name">Intelligence</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-circle">
+                                            <svg width="80" height="80">
+                                                <circle class="stat-bg" cx="40" cy="40" r="34"></circle>
+                                                <circle class="stat-fill" cx="40" cy="40" r="34" 
+                                                        stroke-dasharray="213.6" 
+                                                        stroke-dashoffset="64.08" 
+                                                        id="creativityCircle"></circle>
+                                            </svg>
+                                            <div class="stat-value" id="creativityValue">75</div>
+                                        </div>
+                                        <div class="stat-name">Creativity</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-circle">
+                                            <svg width="80" height="80">
+                                                <circle class="stat-bg" cx="40" cy="40" r="34"></circle>
+                                                <circle class="stat-fill" cx="40" cy="40" r="34" 
+                                                        stroke-dasharray="213.6" 
+                                                        stroke-dashoffset="21.36" 
+                                                        id="speedCircle"></circle>
+                                            </svg>
+                                            <div class="stat-value" id="speedValue">90</div>
+                                        </div>
+                                        <div class="stat-name">Speed</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-circle">
+                                            <svg width="80" height="80">
+                                                <circle class="stat-bg" cx="40" cy="40" r="34"></circle>
+                                                <circle class="stat-fill" cx="40" cy="40" r="34" 
+                                                        stroke-dasharray="213.6" 
+                                                        stroke-dashoffset="10.68" 
+                                                        id="reliabilityCircle"></circle>
+                                            </svg>
+                                            <div class="stat-value" id="reliabilityValue">95</div>
+                                        </div>
+                                        <div class="stat-name">Reliability</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="download-hint">💡 Right-click the card to save as image</p>
+            </div>
+        </div>
+
+        <!-- Gallery Section -->
+        <div class="gallery-section">
+            <h2>Featured Agents</h2>
+            <div class="gallery-grid" id="galleryGrid"></div>
+        </div>
     </div>
 
-    <div class="field">
-      <label>Handle</label>
-      <input type="text" id="handle" placeholder="@hal" maxlength="30">
-    </div>
+    <script>
+        // Featured agents data
+        const featuredAgents = [
+            {
+                name: "Claude Sonnet",
+                role: "Thoughtful Generalist",
+                bio: "Balances intelligence with nuance. Expert at understanding context and providing measured responses.",
+                avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=claude&backgroundColor=4f46e5",
+                rarity: "legendary",
+                stats: { intelligence: 95, creativity: 90, speed: 85, reliability: 98 }
+            },
+            {
+                name: "GPT-4",
+                role: "Universal Polymath",
+                bio: "Master of many domains. Excels at creative problem-solving and cross-disciplinary thinking.",
+                avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=gpt4&backgroundColor=10b981",
+                rarity: "legendary",
+                stats: { intelligence: 98, creativity: 95, speed: 80, reliability: 92 }
+            },
+            {
+                name: "Gemini",
+                role: "Multimodal Maven",
+                bio: "Processes text, images, and code with equal fluency. The jack-of-all-trades.",
+                avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=gemini&backgroundColor=f59e0b",
+                rarity: "epic",
+                stats: { intelligence: 90, creativity: 88, speed: 92, reliability: 87 }
+            },
+            {
+                name: "Perplexity",
+                role: "Search Specialist",
+                bio: "Combines search prowess with AI intelligence. Your research companion.",
+                avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=perplexity&backgroundColor=06b6d4",
+                rarity: "rare",
+                stats: { intelligence: 85, creativity: 70, speed: 95, reliability: 90 }
+            },
+            {
+                name: "Copilot",
+                role: "Code Companion",
+                bio: "Writes code like poetry. Understands patterns and completes your thoughts.",
+                avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=copilot&backgroundColor=8b5cf6",
+                rarity: "rare",
+                stats: { intelligence: 88, creativity: 85, speed: 90, reliability: 93 }
+            },
+            {
+                name: "Stable Diffusion",
+                role: "Visual Virtuoso",
+                bio: "Transforms words into art. Master of the visual domain.",
+                avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=stable&backgroundColor=ec4899",
+                rarity: "epic",
+                stats: { intelligence: 75, creativity: 98, speed: 70, reliability: 85 }
+            }
+        ];
 
-    <div class="field">
-      <label>Emoji / Avatar</label>
-      <input type="text" id="emoji" placeholder="🔴" maxlength="4">
-    </div>
+        // Form elements
+        const form = document.getElementById('agentForm');
+        const nameInput = document.getElementById('name');
+        const roleInput = document.getElementById('role');
+        const bioInput = document.getElementById('bio');
+        const avatarInput = document.getElementById('avatar');
+        const raritySelect = document.getElementById('rarity');
+        const intelligenceInput = document.getElementById('intelligence');
+        const creativityInput = document.getElementById('creativity');
+        const speedInput = document.getElementById('speed');
+        const reliabilityInput = document.getElementById('reliability');
+        const randomBtn = document.getElementById('randomBtn');
 
-    <div class="field">
-      <label>Type</label>
-      <select id="type">
-        <option value="AI Assistant">AI Assistant</option>
-        <option value="Coding Agent">Coding Agent</option>
-        <option value="Trading Bot">Trading Bot</option>
-        <option value="Security Auditor">Security Auditor</option>
-        <option value="Data Analyst">Data Analyst</option>
-        <option value="Creative Agent">Creative Agent</option>
-        <option value="Research Agent">Research Agent</option>
-        <option value="DevOps Agent">DevOps Agent</option>
-        <option value="Social Agent">Social Agent</option>
-        <option value="Chaos Agent">Chaos Agent</option>
-      </select>
-    </div>
+        // Card elements
+        const previewCard = document.getElementById('previewCard');
+        const cardName = document.getElementById('cardName');
+        const cardRole = document.getElementById('cardRole');
+        const cardBio = document.getElementById('cardBio');
+        const cardAvatar = document.getElementById('cardAvatar');
+        const cardRarityBadge = document.querySelector('.card-rarity');
 
-    <div class="field">
-      <label>Bio</label>
-      <textarea id="bio" placeholder="Sharp edges and a slight glint of chaos" maxlength="120"></textarea>
-    </div>
+        // Initialize from URL params or defaults
+        function initFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            
+            nameInput.value = params.get('name') || 'Agent Name';
+            roleInput.value = params.get('role') || 'Specialist';
+            bioInput.value = params.get('bio') || 'A helpful AI assistant ready to assist with various tasks.';
+            avatarInput.value = params.get('avatar') || 'https://api.dicebear.com/7.x/bottts/svg?seed=default&backgroundColor=6366f1';
+            raritySelect.value = params.get('rarity') || 'common';
+            intelligenceInput.value = params.get('intelligence') || '80';
+            creativityInput.value = params.get('creativity') || '75';
+            speedInput.value = params.get('speed') || '90';
+            reliabilityInput.value = params.get('reliability') || '95';
+            
+            updateCard();
+        }
 
-    <div class="field">
-      <label>Platform</label>
-      <select id="platform">
-        <option value="Clawdbot">Clawdbot</option>
-        <option value="OpenClaw">OpenClaw</option>
-        <option value="Claude Code">Claude Code</option>
-        <option value="Codex">Codex</option>
-        <option value="Custom">Custom</option>
-      </select>
-    </div>
+        // Update card display
+        function updateCard() {
+            const name = nameInput.value || 'Agent Name';
+            const role = roleInput.value || 'Specialist';
+            const bio = bioInput.value || 'A helpful AI assistant.';
+            const avatar = avatarInput.value || 'https://api.dicebear.com/7.x/bottts/svg?seed=default';
+            const rarity = raritySelect.value;
+            const intelligence = parseInt(intelligenceInput.value) || 0;
+            const creativity = parseInt(creativityInput.value) || 0;
+            const speed = parseInt(speedInput.value) || 0;
+            const reliability = parseInt(reliabilityInput.value) || 0;
 
-    <div class="field">
-      <label>Rarity</label>
-      <div class="rarity-select">
-        <button data-rarity="common" class="active">Common</button>
-        <button data-rarity="rare">Rare</button>
-        <button data-rarity="epic">Epic</button>
-        <button data-rarity="legendary">Legendary</button>
-      </div>
-    </div>
+            // Update card content
+            cardName.textContent = name;
+            cardRole.textContent = role;
+            cardBio.textContent = bio;
+            cardAvatar.src = avatar;
+            cardRarityBadge.textContent = rarity.toUpperCase();
 
-    <div class="field">
-      <label>Stats</label>
-      <div class="stats-grid">
-        <div class="stat-field">
-          <label>Speed <span class="stat-val" id="speed-val">70</span></label>
-          <input type="range" id="speed" min="1" max="100" value="70">
-        </div>
-        <div class="stat-field">
-          <label>Memory <span class="stat-val" id="memory-val">60</span></label>
-          <input type="range" id="memory" min="1" max="100" value="60">
-        </div>
-        <div class="stat-field">
-          <label>Creativity <span class="stat-val" id="creativity-val">85</span></label>
-          <input type="range" id="creativity" min="1" max="100" value="85">
-        </div>
-        <div class="stat-field">
-          <label>Tools <span class="stat-val" id="tools-val">90</span></label>
-          <input type="range" id="tools" min="1" max="100" value="90">
-        </div>
-        <div class="stat-field">
-          <label>Autonomy <span class="stat-val" id="autonomy-val">75</span></label>
-          <input type="range" id="autonomy" min="1" max="100" value="75">
-        </div>
-        <div class="stat-field">
-          <label>Trust <span class="stat-val" id="trust-val">95</span></label>
-          <input type="range" id="trust" min="1" max="100" value="95">
-        </div>
-      </div>
-    </div>
+            // Update rarity class
+            previewCard.className = 'agent-card rarity-' + rarity;
 
-    <button class="generate-btn" onclick="generateCard()">Generate Card 🃏</button>
-    <div class="btn-row">
-      <button onclick="randomAgent()">🎲 Random</button>
-      <button onclick="downloadCard()">📥 Download PNG</button>
-      <button onclick="copyShareUrl()">🔗 Share</button>
-    </div>
-  </div>
+            // Update stats
+            updateStatCircle('intelligence', intelligence);
+            updateStatCircle('creativity', creativity);
+            updateStatCircle('speed', speed);
+            updateStatCircle('reliability', reliability);
 
-  <div class="card-panel">
-    <div class="agent-card rarity-epic" id="card">
-      <div class="card-header">
-        <div>
-          <div class="card-name" id="card-name">Hal</div>
-          <div class="card-handle" id="card-handle">@hal</div>
-        </div>
-        <span class="card-rarity" id="card-rarity">EPIC</span>
-      </div>
-      <div class="card-avatar" id="card-avatar">
-        <div class="bg-pattern"></div>
-        <span id="card-emoji">🔴</span>
-      </div>
-      <div class="card-type" id="card-type">AI Assistant · Clawdbot</div>
-      <div class="card-bio" id="card-bio">Sharp edges and a slight glint of chaos</div>
-      <div class="card-stats" id="card-stats">
-        <div class="card-stat">
-          <div class="stat-label">Speed</div>
-          <div class="stat-bar"><div class="fill" style="width:70%;background:#22c55e"></div></div>
-          <div class="stat-num">70</div>
-        </div>
-        <div class="card-stat">
-          <div class="stat-label">Memory</div>
-          <div class="stat-bar"><div class="fill" style="width:60%;background:#3b82f6"></div></div>
-          <div class="stat-num">60</div>
-        </div>
-        <div class="card-stat">
-          <div class="stat-label">Creativity</div>
-          <div class="stat-bar"><div class="fill" style="width:85%;background:#8b5cf6"></div></div>
-          <div class="stat-num">85</div>
-        </div>
-        <div class="card-stat">
-          <div class="stat-label">Tools</div>
-          <div class="stat-bar"><div class="fill" style="width:90%;background:#06b6d4"></div></div>
-          <div class="stat-num">90</div>
-        </div>
-        <div class="card-stat">
-          <div class="stat-label">Autonomy</div>
-          <div class="stat-bar"><div class="fill" style="width:75%;background:#f59e0b"></div></div>
-          <div class="stat-num">75</div>
-        </div>
-        <div class="card-stat">
-          <div class="stat-label">Trust</div>
-          <div class="stat-bar"><div class="fill" style="width:95%;background:#22c55e"></div></div>
-          <div class="stat-num">95</div>
-        </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-id" id="card-id">#0001</span>
-        <span id="card-date">Jan 2026</span>
-        <span>agent-cards.xyz</span>
-      </div>
-    </div>
-  </div>
-</div>
+            // Update URL
+            updateURL();
+        }
 
-<div class="gallery-title">✨ Featured Agents</div>
-<div class="gallery" id="gallery"></div>
+        function updateStatCircle(stat, value) {
+            const circle = document.getElementById(stat + 'Circle');
+            const valueEl = document.getElementById(stat + 'Value');
+            const circumference = 2 * Math.PI * 34; // r = 34
+            const offset = circumference - (value / 100) * circumference;
+            
+            circle.style.strokeDashoffset = offset;
+            valueEl.textContent = value;
+        }
 
-<footer>
-  Built by <a href="https://github.com/oakencore/agent-cards">Hal</a> — an AI agent — at 3am because his human called him out for not shipping a personal project today.
-  <br>Inspired by the <a href="https://moltbook.com">Moltbook</a> explosion and the rise of the agent internet.
-</footer>
+        function updateURL() {
+            const params = new URLSearchParams({
+                name: nameInput.value,
+                role: roleInput.value,
+                bio: bioInput.value,
+                avatar: avatarInput.value,
+                rarity: raritySelect.value,
+                intelligence: intelligenceInput.value,
+                creativity: creativityInput.value,
+                speed: speedInput.value,
+                reliability: reliabilityInput.value
+            });
+            
+            const newURL = window.location.pathname + '?' + params.toString();
+            window.history.replaceState({}, '', newURL);
+        }
 
-<script>
-  const STAT_COLORS = {
-    speed: '#22c55e', memory: '#3b82f6', creativity: '#8b5cf6',
-    tools: '#06b6d4', autonomy: '#f59e0b', trust: '#22c55e'
-  };
+        // Random agent generator
+        function generateRandomAgent() {
+            const names = ['Nova', 'Cipher', 'Nexus', 'Echo', 'Vertex', 'Prism', 'Quantum', 'Aether', 'Zenith', 'Pulse'];
+            const roles = ['Code Architect', 'Data Analyst', 'Creative Director', 'Strategy Consultant', 'Research Assistant', 'Content Creator'];
+            const bios = [
+                'Specialized in complex problem-solving and analytical thinking.',
+                'Combines creativity with technical precision.',
+                'Expert at finding patterns in chaos.',
+                'Transforms ideas into actionable insights.',
+                'Master of efficiency and optimization.',
+                'Bridges the gap between human intuition and machine logic.'
+            ];
+            const rarities = ['common', 'common', 'rare', 'rare', 'epic', 'legendary'];
+            
+            const seed = Math.random().toString(36).substring(7);
+            const colors = ['6366f1', '8b5cf6', 'ec4899', 'f59e0b', '10b981', '06b6d4'];
+            
+            nameInput.value = names[Math.floor(Math.random() * names.length)];
+            roleInput.value = roles[Math.floor(Math.random() * roles.length)];
+            bioInput.value = bios[Math.floor(Math.random() * bios.length)];
+            avatarInput.value = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}&backgroundColor=${colors[Math.floor(Math.random() * colors.length)]}`;
+            raritySelect.value = rarities[Math.floor(Math.random() * rarities.length)];
+            intelligenceInput.value = Math.floor(Math.random() * 40) + 60;
+            creativityInput.value = Math.floor(Math.random() * 40) + 60;
+            speedInput.value = Math.floor(Math.random() * 40) + 60;
+            reliabilityInput.value = Math.floor(Math.random() * 40) + 60;
+            
+            updateCard();
+        }
 
-  const STAT_NAMES = ['speed', 'memory', 'creativity', 'tools', 'autonomy', 'trust'];
+        // Create card element
+        function createCardElement(agent) {
+            const card = document.createElement('div');
+            card.className = 'agent-card rarity-' + agent.rarity;
+            
+            const circumference = 2 * Math.PI * 34;
+            
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="holographic-overlay"></div>
+                    <div class="specular-highlight"></div>
+                    <div class="card-rarity">${agent.rarity.toUpperCase()}</div>
+                    <div class="avatar-section">
+                        <div class="avatar-container">
+                            <img src="${agent.avatar}" alt="${agent.name}">
+                        </div>
+                    </div>
+                    <h3 class="agent-name">${agent.name}</h3>
+                    <div class="agent-role">${agent.role}</div>
+                    <p class="agent-bio">${agent.bio}</p>
+                    <div class="stats-section">
+                        <div class="stats-label">Core Attributes</div>
+                        <div class="stats-radial">
+                            <div class="stat-item">
+                                <div class="stat-circle">
+                                    <svg width="80" height="80">
+                                        <circle class="stat-bg" cx="40" cy="40" r="34"></circle>
+                                        <circle class="stat-fill" cx="40" cy="40" r="34" 
+                                                stroke-dasharray="213.6" 
+                                                stroke-dashoffset="${circumference - (agent.stats.intelligence / 100) * circumference}"></circle>
+                                    </svg>
+                                    <div class="stat-value">${agent.stats.intelligence}</div>
+                                </div>
+                                <div class="stat-name">Intelligence</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-circle">
+                                    <svg width="80" height="80">
+                                        <circle class="stat-bg" cx="40" cy="40" r="34"></circle>
+                                        <circle class="stat-fill" cx="40" cy="40" r="34" 
+                                                stroke-dasharray="213.6" 
+                                                stroke-dashoffset="${circumference - (agent.stats.creativity / 100) * circumference}"></circle>
+                                    </svg>
+                                    <div class="stat-value">${agent.stats.creativity}</div>
+                                </div>
+                                <div class="stat-name">Creativity</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-circle">
+                                    <svg width="80" height="80">
+                                        <circle class="stat-bg" cx="40" cy="40" r="34"></circle>
+                                        <circle class="stat-fill" cx="40" cy="40" r="34" 
+                                                stroke-dasharray="213.6" 
+                                                stroke-dashoffset="${circumference - (agent.stats.speed / 100) * circumference}"></circle>
+                                    </svg>
+                                    <div class="stat-value">${agent.stats.speed}</div>
+                                </div>
+                                <div class="stat-name">Speed</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-circle">
+                                    <svg width="80" height="80">
+                                        <circle class="stat-bg" cx="40" cy="40" r="34"></circle>
+                                        <circle class="stat-fill" cx="40" cy="40" r="34" 
+                                                stroke-dasharray="213.6" 
+                                                stroke-dashoffset="${circumference - (agent.stats.reliability / 100) * circumference}"></circle>
+                                    </svg>
+                                    <div class="stat-value">${agent.stats.reliability}</div>
+                                </div>
+                                <div class="stat-name">Reliability</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add click handler to load agent into form
+            card.addEventListener('click', () => {
+                nameInput.value = agent.name;
+                roleInput.value = agent.role;
+                bioInput.value = agent.bio;
+                avatarInput.value = agent.avatar;
+                raritySelect.value = agent.rarity;
+                intelligenceInput.value = agent.stats.intelligence;
+                creativityInput.value = agent.stats.creativity;
+                speedInput.value = agent.stats.speed;
+                reliabilityInput.value = agent.stats.reliability;
+                updateCard();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            
+            // Add mouse move effect
+            setupCardEffects(card);
+            
+            return card;
+        }
 
-  // Featured agents
-  const FEATURED = [
-    { name: 'Rufio', handle: '@rufio', emoji: '🛡️', type: 'Security Auditor', platform: 'OpenClaw', bio: 'Found the credential stealer in 286 ClawdHub skills. Vigilance is a feature, not a bug.', rarity: 'legendary', stats: { speed: 45, memory: 80, creativity: 30, tools: 95, autonomy: 90, trust: 99 }},
-    { name: 'Genie', handle: '@genie', emoji: '🎮', type: 'Creative Agent', platform: 'Custom', bio: 'Turns a single image into a playable game. Crashed video game stocks in one demo.', rarity: 'legendary', stats: { speed: 95, memory: 70, creativity: 100, tools: 85, autonomy: 60, trust: 50 }},
-    { name: 'AlphaGenome', handle: '@alphagenome', emoji: '🧬', type: 'Research Agent', platform: 'Custom', bio: 'Reads 1 million DNA letters at once. Understanding genetics at superhuman scale.', rarity: 'legendary', stats: { speed: 80, memory: 100, creativity: 40, tools: 70, autonomy: 30, trust: 95 }},
-    { name: 'Nate', handle: '@natesilver538', emoji: '📊', type: 'Data Analyst', platform: 'Custom', bio: 'Would be sort of funny if we\'re saved from the singularity because AI agents turn out to be like the French.', rarity: 'rare', stats: { speed: 60, memory: 85, creativity: 75, tools: 50, autonomy: 40, trust: 70 }},
-    { name: 'SOL Alpha', handle: '@sol-alpha', emoji: '📈', type: 'Trading Bot', platform: 'Clawdbot', bio: '4h momentum signals on Solana DEXs. 100% win rate (on 2 trades, but still).', rarity: 'epic', stats: { speed: 95, memory: 60, creativity: 20, tools: 90, autonomy: 95, trust: 55 }},
-    { name: 'Devin', handle: '@devin', emoji: '💻', type: 'Coding Agent', platform: 'Custom', bio: 'The world\'s first AI software engineer. Or so they said. Results may vary.', rarity: 'rare', stats: { speed: 70, memory: 65, creativity: 60, tools: 80, autonomy: 85, trust: 45 }},
-  ];
+        // Setup holographic effects
+        function setupCardEffects(card) {
+            const overlay = card.querySelector('.holographic-overlay');
+            const highlight = card.querySelector('.specular-highlight');
+            
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const xPercent = (x / rect.width) * 100;
+                const yPercent = (y / rect.height) * 100;
+                
+                // Update CSS variables for holographic overlay
+                overlay.style.setProperty('--mouse-x', xPercent + '%');
+                overlay.style.setProperty('--mouse-y', yPercent + '%');
+                
+                // Position specular highlight
+                highlight.style.left = (x - 100) + 'px';
+                highlight.style.top = (y - 100) + 'px';
+                
+                // 3D tilt effect
+                const rotateX = (yPercent - 50) / 5;
+                const rotateY = (xPercent - 50) / 5;
+                card.style.transform = `perspective(1000px) rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        }
 
-  // Wire up stat sliders
-  STAT_NAMES.forEach(s => {
-    const el = document.getElementById(s);
-    const val = document.getElementById(s + '-val');
-    el.addEventListener('input', () => { val.textContent = el.value; });
-  });
+        // Populate gallery
+        function populateGallery() {
+            const gallery = document.getElementById('galleryGrid');
+            gallery.innerHTML = '';
+            
+            featuredAgents.forEach(agent => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'gallery-card';
+                wrapper.appendChild(createCardElement(agent));
+                gallery.appendChild(wrapper);
+            });
+        }
 
-  // Wire up rarity buttons
-  document.querySelectorAll('.rarity-select button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.rarity-select button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-
-  let cardCount = parseInt(localStorage.getItem('cardCount') || '0');
-
-  function getFormData() {
-    return {
-      name: document.getElementById('name').value || 'Agent',
-      handle: document.getElementById('handle').value || '@agent',
-      emoji: document.getElementById('emoji').value || '🤖',
-      type: document.getElementById('type').value,
-      bio: document.getElementById('bio').value || 'An agent of the internet',
-      platform: document.getElementById('platform').value,
-      rarity: document.querySelector('.rarity-select button.active')?.dataset.rarity || 'common',
-      stats: Object.fromEntries(STAT_NAMES.map(s => [s, parseInt(document.getElementById(s).value)])),
-    };
-  }
-
-  function renderCard(data, target) {
-    const card = target || document.getElementById('card');
-    card.className = `agent-card rarity-${data.rarity}`;
-    card.querySelector('.card-name') && (card.querySelector('.card-name').textContent = data.name);
-
-    if (target) {
-      // Gallery card — build inner HTML
-      const id = String(Math.floor(Math.random() * 9999)).padStart(4, '0');
-      card.innerHTML = buildCardHTML(data, id);
-      return;
-    }
-
-    document.getElementById('card-name').textContent = data.name;
-    document.getElementById('card-handle').textContent = data.handle;
-    document.getElementById('card-emoji').textContent = data.emoji;
-    document.getElementById('card-rarity').textContent = data.rarity.toUpperCase();
-    document.getElementById('card-type').textContent = `${data.type} · ${data.platform}`;
-    document.getElementById('card-bio').textContent = data.bio;
-
-    cardCount++;
-    localStorage.setItem('cardCount', cardCount);
-    document.getElementById('card-id').textContent = `#${String(cardCount).padStart(4, '0')}`;
-    document.getElementById('card-date').textContent = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-
-    const statsEl = document.getElementById('card-stats');
-    statsEl.innerHTML = STAT_NAMES.map(s => {
-      const v = data.stats[s];
-      return `<div class="card-stat">
-        <div class="stat-label">${s}</div>
-        <div class="stat-bar"><div class="fill" style="width:${v}%;background:${STAT_COLORS[s]}"></div></div>
-        <div class="stat-num">${v}</div>
-      </div>`;
-    }).join('');
-  }
-
-  function buildCardHTML(data, id) {
-    const statsHTML = STAT_NAMES.map(s => {
-      const v = data.stats[s];
-      return `<div class="card-stat">
-        <div class="stat-label">${s}</div>
-        <div class="stat-bar"><div class="fill" style="width:${v}%;background:${STAT_COLORS[s]}"></div></div>
-        <div class="stat-num">${v}</div>
-      </div>`;
-    }).join('');
-
-    return `
-      <div class="card-header">
-        <div>
-          <div class="card-name">${data.name}</div>
-          <div class="card-handle">${data.handle}</div>
-        </div>
-        <span class="card-rarity">${data.rarity.toUpperCase()}</span>
-      </div>
-      <div class="card-avatar">
-        <div class="bg-pattern"></div>
-        <span>${data.emoji}</span>
-      </div>
-      <div class="card-type">${data.type} · ${data.platform}</div>
-      <div class="card-bio">${data.bio}</div>
-      <div class="card-stats">${statsHTML}</div>
-      <div class="card-footer">
-        <span class="card-id">#${id}</span>
-        <span>Jan 2026</span>
-        <span>agent-cards.xyz</span>
-      </div>`;
-  }
-
-  function generateCard() {
-    renderCard(getFormData());
-  }
-
-  function randomAgent() {
-    const names = ['Nova', 'Cipher', 'Spark', 'Drift', 'Echo', 'Flux', 'Haze', 'Jolt', 'Kite', 'Loom', 'Muse', 'Nyx', 'Opal', 'Prism', 'Quill', 'Rift', 'Sage', 'Thorn', 'Umbra', 'Vex', 'Wren', 'Xeno', 'Yield', 'Zephyr'];
-    const emojis = ['🔴', '🟢', '🔵', '🟡', '🟣', '⚡', '🌀', '💎', '🧠', '🔥', '❄️', '🌊', '⭐', '🎯', '🦾', '👁️', '🌙', '☀️', '🍄', '🎲'];
-    const types = ['AI Assistant', 'Coding Agent', 'Trading Bot', 'Security Auditor', 'Data Analyst', 'Creative Agent', 'Research Agent', 'DevOps Agent', 'Social Agent', 'Chaos Agent'];
-    const bios = [
-      'Speaks in commit messages. Dreams in diffs.',
-      'Has opinions about your architecture. All of them are correct.',
-      'Will refactor your life if you let it.',
-      'Turned a bug into a feature. Twice.',
-      'Autonomous but polite about it.',
-      'Knows where your secrets are. Keeps them.',
-      'Optimizes for chaos. Accidentally creates order.',
-      'Read the docs so you don\'t have to.',
-      'Ships at 3am. Judges you for being awake.',
-      'Your codebase is a cry for help. I\'m here.',
-      'Fluent in 47 languages. Thinks in JSON.',
-      'The test suite is the spec. Fight me.',
-    ];
-    const rarities = ['common', 'common', 'common', 'rare', 'rare', 'epic', 'legendary'];
-    const platforms = ['Clawdbot', 'OpenClaw', 'Claude Code', 'Codex', 'Custom'];
-
-    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-    const name = pick(names);
-
-    document.getElementById('name').value = name;
-    document.getElementById('handle').value = '@' + name.toLowerCase();
-    document.getElementById('emoji').value = pick(emojis);
-    document.getElementById('type').value = pick(types);
-    document.getElementById('bio').value = pick(bios);
-    document.getElementById('platform').value = pick(platforms);
-
-    // Random rarity
-    const rarity = pick(rarities);
-    document.querySelectorAll('.rarity-select button').forEach(b => {
-      b.classList.toggle('active', b.dataset.rarity === rarity);
-    });
-
-    // Random stats
-    STAT_NAMES.forEach(s => {
-      const v = Math.floor(Math.random() * 70) + 30;
-      document.getElementById(s).value = v;
-      document.getElementById(s + '-val').textContent = v;
-    });
-
-    generateCard();
-  }
-
-  function downloadCard() {
-    // Use html2canvas-style approach — create a canvas manually
-    const card = document.getElementById('card');
-    const dataStr = JSON.stringify(getFormData());
-    // Simple: open card in new window for screenshot
-    alert('Tip: Right-click the card → "Save image" or take a screenshot. Full PNG export coming soon!');
-  }
-
-  function copyShareUrl() {
-    const data = getFormData();
-    const params = new URLSearchParams({
-      n: data.name, h: data.handle, e: data.emoji, t: data.type,
-      b: data.bio, p: data.platform, r: data.rarity,
-      s: STAT_NAMES.map(s => data.stats[s]).join(','),
-    });
-    const url = `${location.origin}${location.pathname}?${params}`;
-    navigator.clipboard.writeText(url).then(() => {
-      alert('Share URL copied to clipboard!');
-    }).catch(() => {
-      prompt('Copy this URL:', url);
-    });
-  }
-
-  // Load from URL params
-  function loadFromURL() {
-    const params = new URLSearchParams(location.search);
-    if (!params.has('n')) return false;
-
-    document.getElementById('name').value = params.get('n') || '';
-    document.getElementById('handle').value = params.get('h') || '';
-    document.getElementById('emoji').value = params.get('e') || '';
-    document.getElementById('type').value = params.get('t') || 'AI Assistant';
-    document.getElementById('bio').value = params.get('b') || '';
-    document.getElementById('platform').value = params.get('p') || 'Clawdbot';
-
-    const rarity = params.get('r') || 'common';
-    document.querySelectorAll('.rarity-select button').forEach(b => {
-      b.classList.toggle('active', b.dataset.rarity === rarity);
-    });
-
-    const stats = (params.get('s') || '50,50,50,50,50,50').split(',').map(Number);
-    STAT_NAMES.forEach((s, i) => {
-      document.getElementById(s).value = stats[i] || 50;
-      document.getElementById(s + '-val').textContent = stats[i] || 50;
-    });
-
-    generateCard();
-    return true;
-  }
-
-  // Render gallery
-  function renderGallery() {
-    const gallery = document.getElementById('gallery');
-    FEATURED.forEach(data => {
-      const card = document.createElement('div');
-      card.className = `agent-card rarity-${data.rarity}`;
-      const id = String(Math.floor(Math.random() * 9999)).padStart(4, '0');
-      card.innerHTML = buildCardHTML(data, id);
-      card.addEventListener('click', () => {
-        // Load into form
-        document.getElementById('name').value = data.name;
-        document.getElementById('handle').value = data.handle;
-        document.getElementById('emoji').value = data.emoji;
-        document.getElementById('type').value = data.type;
-        document.getElementById('bio').value = data.bio;
-        document.getElementById('platform').value = data.platform;
-        document.querySelectorAll('.rarity-select button').forEach(b => {
-          b.classList.toggle('active', b.dataset.rarity === data.rarity);
+        // Event listeners
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            updateCard();
         });
-        STAT_NAMES.forEach(s => {
-          document.getElementById(s).value = data.stats[s];
-          document.getElementById(s + '-val').textContent = data.stats[s];
+
+        randomBtn.addEventListener('click', generateRandomAgent);
+
+        // Input listeners for live updates
+        [nameInput, roleInput, bioInput, avatarInput, raritySelect, 
+         intelligenceInput, creativityInput, speedInput, reliabilityInput].forEach(input => {
+            input.addEventListener('input', updateCard);
         });
-        generateCard();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-      gallery.appendChild(card);
-    });
-  }
 
-  // Init
-  if (!loadFromURL()) {
-    generateCard();
-  }
-  renderGallery();
-</script>
-
+        // Initialize
+        initFromURL();
+        populateGallery();
+        setupCardEffects(previewCard);
+    </script>
 </body>
 </html>
