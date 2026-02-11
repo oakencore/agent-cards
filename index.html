@@ -1108,24 +1108,49 @@
     });
   }
 
-  // Gallery hover management - prevents multiple cards triggering at once
+  // Gallery hover management - debounced to prevent glitching between overlapping cards
   function setupGalleryHover(gallery) {
     const cards = gallery.querySelectorAll('.agent-card');
+    let hoverTimeout = null;
+    let currentHover = null;
+
     cards.forEach(card => {
       card.addEventListener('mouseenter', () => {
-        gallery.classList.add('has-hover');
-        cards.forEach(c => c.classList.remove('card-hover'));
-        card.classList.add('card-hover');
+        // Clear any pending hover change
+        if (hoverTimeout) clearTimeout(hoverTimeout);
+        
+        // Debounce: wait 80ms before activating this card
+        hoverTimeout = setTimeout(() => {
+          if (currentHover !== card) {
+            cards.forEach(c => c.classList.remove('card-hover'));
+            card.classList.add('card-hover');
+            gallery.classList.add('has-hover');
+            currentHover = card;
+          }
+        }, 80);
       });
+
       card.addEventListener('mouseleave', () => {
-        card.classList.remove('card-hover');
-        // Small delay to check if another card was entered
-        setTimeout(() => {
+        // Clear pending hover if we leave before it activates
+        if (hoverTimeout) clearTimeout(hoverTimeout);
+        
+        // Delay removing hover in case we're moving to another card
+        hoverTimeout = setTimeout(() => {
+          card.classList.remove('card-hover');
+          currentHover = null;
           if (!gallery.querySelector('.card-hover')) {
             gallery.classList.remove('has-hover');
           }
-        }, 50);
+        }, 100);
       });
+    });
+
+    // Also clear everything when leaving the gallery entirely
+    gallery.addEventListener('mouseleave', () => {
+      if (hoverTimeout) clearTimeout(hoverTimeout);
+      cards.forEach(c => c.classList.remove('card-hover'));
+      gallery.classList.remove('has-hover');
+      currentHover = null;
     });
   }
 
