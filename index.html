@@ -1112,79 +1112,31 @@
     });
   }
 
-  // Gallery hover management with hysteresis to prevent flicker
-  // Once a card is hovered, it stays hovered until mouse moves significantly away
+  // Gallery hover management using horizontal zones
+  // Divides gallery into equal zones - no overlap = no flicker
   function setupGalleryHover(gallery) {
     const cards = Array.from(gallery.querySelectorAll('.agent-card'));
     let currentHover = null;
-    // Store initial card positions (before any transforms)
-    const cardPositions = new Map();
-    
-    function cachePositions() {
-      // Cache positions when no card is hovered (reset state)
-      cards.forEach((card, i) => {
-        // Calculate expected center based on fan layout
-        const galleryRect = gallery.getBoundingClientRect();
-        const offsets = [-200, -120, -40, 40, 120, 200];
-        cardPositions.set(card, {
-          x: galleryRect.left + galleryRect.width / 2 + (offsets[i] || 0),
-          y: galleryRect.top + galleryRect.height / 2
-        });
-      });
-    }
-
-    function findClosestCard(mouseX, mouseY, excludeHysteresis = false) {
-      let closest = null;
-      let minDist = Infinity;
-
-      cards.forEach(card => {
-        const pos = cardPositions.get(card);
-        if (!pos) return;
-        
-        // Use cached position, not live position (avoids flicker from transforms)
-        const dx = (mouseX - pos.x) * 1.2;
-        const dy = mouseY - pos.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < minDist) {
-          minDist = dist;
-          closest = card;
-        }
-      });
-
-      return { card: closest, dist: minDist };
-    }
-
-    // Cache on init and window resize
-    cachePositions();
-    window.addEventListener('resize', cachePositions);
 
     gallery.addEventListener('mousemove', (e) => {
-      const { card: closest, dist } = findClosestCard(e.clientX, e.clientY);
+      const rect = gallery.getBoundingClientRect();
+      const relX = e.clientX - rect.left;
+      const relY = e.clientY - rect.top;
       
-      // Hysteresis: if we have a current hover, require significant movement to switch
-      // The lifted card moves ~40px up, so we need at least that much hysteresis
-      if (currentHover && closest !== currentHover) {
-        const currentPos = cardPositions.get(currentHover);
-        if (currentPos) {
-          const dx = (e.clientX - currentPos.x) * 1.2;
-          const dy = e.clientY - currentPos.y;
-          const distToCurrent = Math.sqrt(dx * dx + dy * dy);
-          
-          // Only switch if new card is significantly closer (60px threshold)
-          if (dist > distToCurrent - 60) {
-            return; // Keep current hover
-          }
-        }
-      }
-
-      if (closest !== currentHover) {
+      // Only respond if mouse is in the vertical card area (with some padding)
+      if (relY < 50 || relY > rect.height - 50) return;
+      
+      // Divide width into zones for each card
+      const zoneWidth = rect.width / cards.length;
+      const zoneIndex = Math.floor(relX / zoneWidth);
+      const cardIndex = Math.max(0, Math.min(cards.length - 1, zoneIndex));
+      const targetCard = cards[cardIndex];
+      
+      if (targetCard !== currentHover) {
         cards.forEach(c => c.classList.remove('card-hover'));
-        if (closest) {
-          closest.classList.add('card-hover');
-          gallery.classList.add('has-hover');
-        }
-        currentHover = closest;
+        targetCard.classList.add('card-hover');
+        gallery.classList.add('has-hover');
+        currentHover = targetCard;
       }
     });
 
