@@ -1112,24 +1112,41 @@
     });
   }
 
-  // Gallery hover management using horizontal zones
-  // Divides gallery into equal zones - no overlap = no flicker
+  // Gallery hover management using zones aligned to card positions
+  // Cards are fanned with translateX offsets: -200, -120, -40, 40, 120, 200
   function setupGalleryHover(gallery) {
     const cards = Array.from(gallery.querySelectorAll('.agent-card'));
     let currentHover = null;
+    
+    // Card center offsets from gallery center (matches CSS transforms)
+    const offsets = [-200, -120, -40, 40, 120, 200];
+    
+    // Calculate zone boundaries (midpoints between adjacent card centers)
+    // Zone i covers: boundary[i] to boundary[i+1]
+    const boundaries = [];
+    for (let i = 0; i < offsets.length - 1; i++) {
+      boundaries.push((offsets[i] + offsets[i + 1]) / 2);
+    }
+    // boundaries = [-160, -80, 0, 80, 160]
 
     gallery.addEventListener('mousemove', (e) => {
       const rect = gallery.getBoundingClientRect();
       const relX = e.clientX - rect.left;
       const relY = e.clientY - rect.top;
       
-      // Only respond if mouse is in the vertical card area (with some padding)
+      // Only respond if mouse is in the vertical card area
       if (relY < 50 || relY > rect.height - 50) return;
       
-      // Divide width into zones for each card
-      const zoneWidth = rect.width / cards.length;
-      const zoneIndex = Math.floor(relX / zoneWidth);
-      const cardIndex = Math.max(0, Math.min(cards.length - 1, zoneIndex));
+      // Convert to offset from gallery center
+      const centerX = rect.width / 2;
+      const offsetX = relX - centerX;
+      
+      // Find which zone (card) this offset falls into
+      let cardIndex = 0;
+      for (let i = 0; i < boundaries.length; i++) {
+        if (offsetX >= boundaries[i]) cardIndex = i + 1;
+      }
+      
       const targetCard = cards[cardIndex];
       
       if (targetCard !== currentHover) {
