@@ -623,13 +623,19 @@
   .gallery .agent-card:nth-child(6) { transform: rotate(15deg) translateX(200px); z-index: 6; }
 
   /* Hover lift effect - card rises out of stack */
-  .gallery .agent-card:hover {
+  .gallery .agent-card.card-hover {
     transform: rotate(0deg) translateX(0) translateY(-40px) scale(1.08) !important;
     box-shadow: 0 25px 50px rgba(0,0,0,0.25);
     z-index: 100 !important;
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
                 box-shadow 0.3s ease-out,
                 z-index 0s;
+  }
+
+  /* Suppress hover on other cards when one is active */
+  .gallery.has-hover .agent-card:not(.card-hover) {
+    opacity: 0.7;
+    filter: brightness(0.95);
   }
 
   .gallery .card-hero { height: 140px; }
@@ -1102,6 +1108,27 @@
     });
   }
 
+  // Gallery hover management - prevents multiple cards triggering at once
+  function setupGalleryHover(gallery) {
+    const cards = gallery.querySelectorAll('.agent-card');
+    cards.forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        gallery.classList.add('has-hover');
+        cards.forEach(c => c.classList.remove('card-hover'));
+        card.classList.add('card-hover');
+      });
+      card.addEventListener('mouseleave', () => {
+        card.classList.remove('card-hover');
+        // Small delay to check if another card was entered
+        setTimeout(() => {
+          if (!gallery.querySelector('.card-hover')) {
+            gallery.classList.remove('has-hover');
+          }
+        }, 50);
+      });
+    });
+  }
+
   // Render gallery
   function renderGallery() {
     const gallery = document.getElementById('gallery');
@@ -1136,6 +1163,7 @@
   // Init
   if (!loadFromURL()) { generateCard(); }
   renderGallery();
+  setupGalleryHover(document.getElementById('gallery'));
   setupHoloEffect(document.getElementById('card'));
 </script>
 
