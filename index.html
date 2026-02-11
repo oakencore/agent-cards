@@ -1077,7 +1077,7 @@
   }
 
   // Holographic mouse-tracking
-  function setupHoloEffect(card) {
+  function setupHoloEffect(card, isGalleryCard = false) {
     card.addEventListener('mousemove', e => {
       const rect = card.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -1097,14 +1097,18 @@
         spec.style.top = (y - 90) + 'px';
       }
 
-      // 3D tilt
-      const rx = ((yp - 50) / 50) * 6;
-      const ry = ((xp - 50) / 50) * 6;
-      card.style.transform = `rotateX(${-rx}deg) rotateY(${ry}deg)`;
+      // 3D tilt - only for main card, not gallery cards (conflicts with hover lift)
+      if (!isGalleryCard) {
+        const rx = ((yp - 50) / 50) * 6;
+        const ry = ((xp - 50) / 50) * 6;
+        card.style.transform = `rotateX(${-rx}deg) rotateY(${ry}deg)`;
+      }
     });
 
     card.addEventListener('mouseleave', () => {
-      card.style.transform = '';
+      if (!isGalleryCard) {
+        card.style.transform = '';
+      }
     });
   }
 
@@ -1199,7 +1203,7 @@
       const typeClass = getTypeClass(data.type);
       card.className = `agent-card rarity-${data.rarity} type-${typeClass}`;
       card.innerHTML = buildCardHTML(data, String(Math.floor(Math.random() * 9999)).padStart(4, '0'));
-      setupHoloEffect(card);
+      setupHoloEffect(card, true);
       card.style.cursor = 'pointer';
       card.addEventListener('click', () => {
         document.getElementById('name').value = data.name;
