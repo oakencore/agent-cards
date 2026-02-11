@@ -1108,46 +1108,54 @@
     });
   }
 
-  // Gallery hover management - debounced to prevent glitching between overlapping cards
+  // Gallery hover management - uses mouse position to determine closest card
+  // This prevents glitching when cursor is between overlapping cards
   function setupGalleryHover(gallery) {
-    const cards = gallery.querySelectorAll('.agent-card');
-    let hoverTimeout = null;
+    const cards = Array.from(gallery.querySelectorAll('.agent-card'));
     let currentHover = null;
 
-    cards.forEach(card => {
-      card.addEventListener('mouseenter', () => {
-        // Clear any pending hover change
-        if (hoverTimeout) clearTimeout(hoverTimeout);
-        
-        // Debounce: wait 80ms before activating this card
-        hoverTimeout = setTimeout(() => {
-          if (currentHover !== card) {
-            cards.forEach(c => c.classList.remove('card-hover'));
-            card.classList.add('card-hover');
-            gallery.classList.add('has-hover');
-            currentHover = card;
-          }
-        }, 80);
+    function getCardCenter(card) {
+      const rect = card.getBoundingClientRect();
+      return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+    }
+
+    function findClosestCard(mouseX, mouseY) {
+      let closest = null;
+      let minDist = Infinity;
+
+      cards.forEach(card => {
+        const center = getCardCenter(card);
+        // Weight horizontal distance more since cards spread horizontally
+        const dx = (mouseX - center.x) * 1.5;
+        const dy = mouseY - center.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < minDist) {
+          minDist = dist;
+          closest = card;
+        }
       });
 
-      card.addEventListener('mouseleave', () => {
-        // Clear pending hover if we leave before it activates
-        if (hoverTimeout) clearTimeout(hoverTimeout);
-        
-        // Delay removing hover in case we're moving to another card
-        hoverTimeout = setTimeout(() => {
-          card.classList.remove('card-hover');
-          currentHover = null;
-          if (!gallery.querySelector('.card-hover')) {
-            gallery.classList.remove('has-hover');
-          }
-        }, 100);
-      });
+      return closest;
+    }
+
+    gallery.addEventListener('mousemove', (e) => {
+      const closest = findClosestCard(e.clientX, e.clientY);
+
+      if (closest !== currentHover) {
+        cards.forEach(c => c.classList.remove('card-hover'));
+        if (closest) {
+          closest.classList.add('card-hover');
+          gallery.classList.add('has-hover');
+        }
+        currentHover = closest;
+      }
     });
 
-    // Also clear everything when leaving the gallery entirely
     gallery.addEventListener('mouseleave', () => {
-      if (hoverTimeout) clearTimeout(hoverTimeout);
       cards.forEach(c => c.classList.remove('card-hover'));
       gallery.classList.remove('has-hover');
       currentHover = null;
