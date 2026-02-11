@@ -1108,29 +1108,38 @@
     });
   }
 
-  // Gallery hover management - uses mouse position to determine closest card
-  // This prevents glitching when cursor is between overlapping cards
+  // Gallery hover management with hysteresis to prevent flicker
+  // Once a card is hovered, it stays hovered until mouse moves significantly away
   function setupGalleryHover(gallery) {
     const cards = Array.from(gallery.querySelectorAll('.agent-card'));
     let currentHover = null;
-
-    function getCardCenter(card) {
-      const rect = card.getBoundingClientRect();
-      return {
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2
-      };
+    // Store initial card positions (before any transforms)
+    const cardPositions = new Map();
+    
+    function cachePositions() {
+      // Cache positions when no card is hovered (reset state)
+      cards.forEach((card, i) => {
+        // Calculate expected center based on fan layout
+        const galleryRect = gallery.getBoundingClientRect();
+        const offsets = [-200, -120, -40, 40, 120, 200];
+        cardPositions.set(card, {
+          x: galleryRect.left + galleryRect.width / 2 + (offsets[i] || 0),
+          y: galleryRect.top + galleryRect.height / 2
+        });
+      });
     }
 
-    function findClosestCard(mouseX, mouseY) {
+    function findClosestCard(mouseX, mouseY, excludeHysteresis = false) {
       let closest = null;
       let minDist = Infinity;
 
       cards.forEach(card => {
-        const center = getCardCenter(card);
-        // Weight horizontal distance more since cards spread horizontally
-        const dx = (mouseX - center.x) * 1.5;
-        const dy = mouseY - center.y;
+        const pos = cardPositions.get(card);
+        if (!pos) return;
+        
+        // Use cached position, not live position (avoids flicker from transforms)
+        const dx = (mouseX - pos.x) * 1.2;
+        const dy = mouseY - pos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < minDist) {
@@ -1139,11 +1148,31 @@
         }
       });
 
-      return closest;
+      return { card: closest, dist: minDist };
     }
 
+    // Cache on init and window resize
+    cachePositions();
+    window.addEventListener('resize', cachePositions);
+
     gallery.addEventListener('mousemove', (e) => {
-      const closest = findClosestCard(e.clientX, e.clientY);
+      const { card: closest, dist } = findClosestCard(e.clientX, e.clientY);
+      
+      // Hysteresis: if we have a current hover, require significant movement to switch
+      // The lifted card moves ~40px up, so we need at least that much hysteresis
+      if (currentHover && closest !== currentHover) {
+        const currentPos = cardPositions.get(currentHover);
+        if (currentPos) {
+          const dx = (e.clientX - currentPos.x) * 1.2;
+          const dy = e.clientY - currentPos.y;
+          const distToCurrent = Math.sqrt(dx * dx + dy * dy);
+          
+          // Only switch if new card is significantly closer (60px threshold)
+          if (dist > distToCurrent - 60) {
+            return; // Keep current hover
+          }
+        }
+      }
 
       if (closest !== currentHover) {
         cards.forEach(c => c.classList.remove('card-hover'));
